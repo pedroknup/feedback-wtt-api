@@ -72,7 +72,7 @@ class ConnectionManager {
 
   async fetchFoods(userId: string): Promise<IFood[]> {
     if (!this.connections[userId]) {
-      this.init(userId)
+      await this.init(userId)
     }
     return await this.connections[userId].manager.fetchFoods()
   }
