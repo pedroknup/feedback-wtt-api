@@ -1,0 +1,4 @@
+runtime: nodejs12 # or another supported version
+
+instance_class: F2
+
