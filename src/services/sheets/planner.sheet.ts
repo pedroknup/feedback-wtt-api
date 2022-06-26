@@ -90,8 +90,7 @@ class PlannerSheet extends SheetBase {
     const rowNumber = sheet.rowCount
     await sheet.loadCells(`${WeekPlanSheetCellsInfo.INTERVAL}${rowNumber}`)
 
-    if (this.foods === null)
-      await this.fetchFoods()
+    if (this.foods === null) await this.fetchFoods()
 
     const dayPlan: IDayPlan[] = []
     let currentMeal = ''
@@ -99,11 +98,12 @@ class PlannerSheet extends SheetBase {
       const foodName = sheet.getCellByA1(`${WeekPlanSheetCellsInfo.FOOD_NAME_COLUMN}${i}`).formattedValue
       const food = this.foods.find(food => food.name === foodName)
       if (foodName) {
-        if (!food || foodName.charAt(0) === '[' && foodName.charAt(foodName.length - 1) === ']') {
+        if (!food || (foodName.charAt(0) === '[' && foodName.charAt(foodName.length - 1) === ']')) {
           currentMeal = foodName.substring(1, foodName.length - 1)
         } else {
           if (isFoodValid(food) && food) {
-            const quantityString = sheet.getCellByA1(`${WeekPlanSheetCellsInfo.QUANTITY_COLUMN}${i}`).formattedValue as string
+            const quantityString = sheet.getCellByA1(`${WeekPlanSheetCellsInfo.QUANTITY_COLUMN}${i}`)
+              .formattedValue as string
             const quantity = quantityString ? parseFloat(quantityString) : 1
             dayPlan.push({
               ...food,
@@ -141,6 +141,12 @@ class PlannerSheet extends SheetBase {
     await Promise.all([this.fetchMeta(), this.fetchWeekPlan()])
   }
 
+  async writeFood(food: IFood) {
+    if (!this.doc) throw new Error('No document found')
+
+    const sheet = this.doc.sheetsByTitle[FOOD_TAB_NAME]
+    await sheet.addRow([food.name, food.calories, food.proteins, food.carbs, food.carbs])
+  }
 }
 
 export default PlannerSheet

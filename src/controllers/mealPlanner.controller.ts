@@ -31,8 +31,25 @@ export async function getUserMetaController(req: Request, res: Response) {
 
 export async function getUserFoodsController(req: Request, res: Response) {
   try {
-    res.send(await MealPlannerService.getUserFoods(req.user.sheet))
+    const updatedFoodsPram = req.query.updated as string
+    const isUpdated = updatedFoodsPram && updatedFoodsPram.toLocaleLowerCase() === 'true' ? true : false
+    res.send(await MealPlannerService.getUserFoods(req.user.sheet, isUpdated))
   } catch (e) {
     res.status(500).send()
   }
 }
+
+export async function writeFoodController(req: Request, res: Response) {
+  try {
+    const { name, calories, proteins, carbs, fat } = req.body
+    if (!name || !calories || !proteins || !carbs || !fat) {
+      res.status(400).send('Missing required fields')
+      return
+    }
+
+    res.send(await MealPlannerService.writeFood(req.user.sheet, name, calories, proteins, carbs, fat ))
+  } catch (e: any) {
+    res.status(500).send(e.message)
+  }
+}
+

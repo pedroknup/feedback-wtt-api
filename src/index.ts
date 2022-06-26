@@ -15,6 +15,8 @@ const app = express()
 const processPort = process.env.PORT || ''
 const port = parseInt(processPort) || 8080
 
+app.use(express.json())
+
 app.get('*', (req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*')
   next()

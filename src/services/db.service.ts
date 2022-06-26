@@ -49,6 +49,12 @@ export class DBService extends DBServiceBase {
     return db.collection('foods').find({user}).toArray() as unknown as IFood[]
   }
 
+  public static async getFoodByName(user: string, name: string) {
+    const db = await DBService.db()
+
+    return db.collection('foods').findOne({user, name}) as unknown as IFood
+  }
+
   public static async getAllUsers() {
     const db = await DBService.db()
 

@@ -7,11 +7,14 @@ import {
   getUserMetaController,
   getUserWeekPlanController,
   refreshUserRelatedDataController,
+  writeFoodController,
 } from '../controllers/mealPlanner.controller'
 const mealPlannerRouter = express.Router()
+
 mealPlannerRouter.get('/refresh/:user', userValidatorMiddleware, refreshUserRelatedDataController)
 mealPlannerRouter.get('/week-plan', userValidatorMiddleware, getUserWeekPlanController)
 mealPlannerRouter.get('/meta', userValidatorMiddleware, getUserMetaController)
 mealPlannerRouter.get('/foods', userValidatorMiddleware, getUserFoodsController)
+mealPlannerRouter.post('/food', userValidatorMiddleware, writeFoodController)
 
 export default mealPlannerRouter

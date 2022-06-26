@@ -25,7 +25,7 @@ interface IUser {
 class ConnectionManager {
   private _clientEmail: string
   private _privateKey: string
-  public connections: IConnections = {  }
+  public connections: IConnections = {}
   public users: IUser[] = []
 
   constructor(props: IProps) {
@@ -35,7 +35,6 @@ class ConnectionManager {
   }
 
   async init(userId: string) {
-    
     this.connections[userId] = {
       lastUsedAt: new Date(),
       manager: new PlannerSheet({
@@ -47,13 +46,6 @@ class ConnectionManager {
     console.log('Initialized Spreadsheet module for', userId)
     console.log('Active connections: ', Object.keys(this.connections).length)
     await this.connections[userId].manager.init()
-  }
-
-  private addUserPropsToObject(object: IMeta | IWeekPlan, userId: string) {
-    return {
-      ...object,
-      user: userId,
-    }
   }
 
   async fetchMeta(userId: string): Promise<IMeta> {
@@ -82,6 +74,13 @@ class ConnectionManager {
       await this.init(userId)
     }
     await this.connections[userId].manager.fetchAll()
+  }
+
+  async writeFood(userId: string, food: IFood) {
+    if (!this.connections[userId]) {
+      await this.init(userId)
+    }
+    await this.connections[userId].manager.writeFood(food)
   }
 }
 
