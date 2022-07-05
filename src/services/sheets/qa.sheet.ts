@@ -35,6 +35,7 @@ class QASheet extends SheetBase {
 
     if (!this.doc || !this.sheet) throw new Error('Document or sheet not initialized')
 
+    console.log('fetching')
     this.questionsAndAnswers = []
     for (let i = 2; i <= this.rowCount; i += 1) {
       const question = this.sheet.getCellByA1(`${QASheetCellsInfo.QUESTION_COLUMN}${i}`).formattedValue
@@ -53,7 +54,7 @@ class QASheet extends SheetBase {
 
     if (!this.doc || !this.sheet) throw new Error('Document or sheet not initialized')
 
-    if (answers.length !== this.rowCount - 1) throw new Error('Number of answers does not match number of questions')
+    if (answers.length !== this.rowCount - 1) throw new Error('Number of answers does not match number of questions' + answers.length + ' ' + this.rowCount)
 
     for (let i = 1; i < this.rowCount; i += 1) {
       const answer = answers[i - 1]

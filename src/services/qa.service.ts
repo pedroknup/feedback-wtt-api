@@ -41,12 +41,10 @@ export class QAService {
     if (!this.connectionManager) {
       await this.initConnection()
     }
-  
-    await DBService.deleteQAByUser(user)
 
     const qa = await QAService.connectionManager.writeAnswers(user, answers)
-    await DBService.addQAs(qa)
+    await DBService.updateQAs(qa)
 
-    return qa
+    return await DBService.getQAByUser(user)
   }
 }

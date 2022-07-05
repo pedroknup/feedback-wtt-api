@@ -1,6 +1,6 @@
 import { IUser } from 'src/models/IUser'
 import { DBServiceBase } from './db.base.service'
-import { IQA } from 'src/models/IQA';
+import { IQA } from 'src/models/IQA'
 
 export class DBService extends DBServiceBase {
   public static async addUsers(users: IUser[]) {
@@ -10,12 +10,19 @@ export class DBService extends DBServiceBase {
 
   public static async getAllQAs() {
     const db = await DBService.db()
-    return db.collection('qa').find({ }).toArray() as unknown as IQA[]
+    return db.collection('qa').find({}).toArray() as unknown as IQA[]
   }
 
   public static async addQAs(qas: IQA[]) {
     const db = await DBService.db()
     return db.collection('qa').insertMany(qas)
+  }
+
+  public static async updateQAs(qas: IQA[]) {
+    const db = await DBService.db()
+    qas.forEach(async qa => {
+      await db.collection('qa').updateOne({ _id: qa._id }, { $set: qa }, { upsert: true })
+    })
   }
 
   public static async getUser(user: string) {

@@ -24,11 +24,16 @@ export async function getUserQAController(req: Request, res: Response) {
 
 export async function writeUserAnswersController(req: Request, res: Response){
   try {
-    await QAService.writeUserAnswers(req.user.sheet, req.body.answers)
-    res.status(200).send()
+    if (!req.body.answers) {
+      return res.status(400).send('No answers provided')
+    }
+    const updatedQAs =  await QAService.writeUserAnswers(req.user.sheet, req.body.answers)
+    res.send(updatedQAs)
   } catch (e: any) {
     res.status(500).send(e.message)
   }
+
+  return;
 }
 
 
