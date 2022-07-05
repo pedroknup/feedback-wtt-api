@@ -1,20 +1,19 @@
 /* eslint-disable import/extensions */
 
-import { IMeta } from '../../models/IMeta'
-import { IFood } from '../../models/IFood'
-import { IWeekPlan } from '../../models/IWeekPlan'
-import PlannerSheet from '../sheets/planner.sheet'
+import { IQA } from 'src/models/IQA';
+import QASheet from '../sheets/qa.sheet';
 
 interface IConnections {
   [key: string]: {
     lastUsedAt: Date | undefined
-    manager: PlannerSheet
+    manager: QASheet
   }
 }
 
 interface IProps {
   clientEmail: string
   privateKey: string
+  initialQAs: IQA[]
 }
 
 interface IUser {
@@ -25,6 +24,7 @@ interface IUser {
 class ConnectionManager {
   private _clientEmail: string
   private _privateKey: string
+  private _initialQAs: IQA[] = []
   public connections: IConnections = {}
   public users: IUser[] = []
 
@@ -32,12 +32,13 @@ class ConnectionManager {
     if (!(props.clientEmail && props.privateKey)) throw new Error('Mandatory fields are empty')
     this._clientEmail = props.clientEmail
     this._privateKey = props.privateKey
+    this._initialQAs = props.initialQAs;
   }
 
-  async init(userId: string) {
+  async init(userId: string): Promise<void> {
     this.connections[userId] = {
       lastUsedAt: new Date(),
-      manager: new PlannerSheet({
+      manager: new QASheet({
         clientEmail: this._clientEmail,
         privateKey: this._privateKey,
         spreadSheetId: userId,
@@ -45,42 +46,24 @@ class ConnectionManager {
     }
     console.log('Initialized Spreadsheet module for', userId)
     console.log('Active connections: ', Object.keys(this.connections).length)
-    await this.connections[userId].manager.init()
+    const userQAs = this._initialQAs.filter(qa => qa.user === userId)
+    console.log('user qas', userQAs)
+    await this.connections[userId].manager.init(userQAs)
   }
 
-  async fetchMeta(userId: string): Promise<IMeta> {
+  async fetchQA(userId: string): Promise<IQA[]> {
     if (!this.connections[userId]) {
       this.init(userId)
     }
-    return await this.connections[userId].manager.fetchMeta()
+    return await this.connections[userId].manager.fetchQAs()
   }
 
-  async fetchWeekPlan(userId: string): Promise<IWeekPlan> {
+  async writeAnswers(userId: string, answers: string[]): Promise<IQA[]> {
     if (!this.connections[userId]) {
       this.init(userId)
     }
-    return await this.connections[userId].manager.fetchWeekPlan()
-  }
-
-  async fetchFoods(userId: string): Promise<IFood[]> {
-    if (!this.connections[userId]) {
-      await this.init(userId)
-    }
-    return await this.connections[userId].manager.fetchFoods()
-  }
-
-  async fetchAll(userId: string) {
-    if (!this.connections[userId]) {
-      await this.init(userId)
-    }
-    await this.connections[userId].manager.fetchAll()
-  }
-
-  async writeFood(userId: string, food: IFood) {
-    if (!this.connections[userId]) {
-      await this.init(userId)
-    }
-    await this.connections[userId].manager.writeFood(food)
+  
+    return await this.connections[userId].manager.writeAnswers(answers)
   }
 }
 

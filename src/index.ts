@@ -5,11 +5,11 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
-import mealPlannerRouter from './routes/mealPlanner.route'
-import { MealPlannerService } from './services/mealPlanner.service'
+import { QAService } from './services/qa.service'
 import { AdminService } from './services/admin.service'
 import adminRouter from './routes/admin.route'
 import { DBService } from './services/db.service'
+import qaRouter from './routes/qa.route';
 
 const app = express()
 const processPort = process.env.PORT || ''
@@ -31,10 +31,11 @@ app.get('/health', (req, res) => {
   res.send('OK')
 })
 
-app.use(MealPlannerService.baseURL, mealPlannerRouter)
+app.use(QAService.baseURL, qaRouter)
 app.use(AdminService.baseURL, adminRouter)
 
 app.listen(port, async () => {
   console.log(`server started at http://localhost:${port}`)
   await DBService.db()
+  await QAService.initConnection();
 })

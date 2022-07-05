@@ -1,6 +1,5 @@
 /* eslint-disable import/extensions */
 import { DBService } from './db.service'
-// import credentials from '../credentials.json'
 import UserSheet from './sheets/user.sheet';
 import { Config } from '../config';
 

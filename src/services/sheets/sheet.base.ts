@@ -1,6 +1,7 @@
 /* eslint-disable import/extensions */
 
 import { GoogleSpreadsheet } from 'google-spreadsheet'
+import { IQA } from 'src/models/IQA'
 
 export interface ISheetBaseProps {
   clientEmail: string
@@ -23,7 +24,7 @@ class SheetBase {
     this.spreadSheetId = props.spreadSheetId
   }
 
-  async init() {
+  async init(_QAs? : IQA[]) {
     this.doc = await this._loadDoc()
   }
 
