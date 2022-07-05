@@ -14,12 +14,16 @@ class QASheet extends SheetBase {
 
     if (QAs) {
       this.questionsAndAnswers = QAs;
-      console.log('User', this.spreadSheetId, 'initialized with QAs', this.questionsAndAnswers)
     }
   }
 
   private async _loadRows() {
-    if (!this.doc) throw new Error('No document found')
+    if (!this.doc) {
+      await super.init()
+    }
+    if (!this.doc){
+      throw new Error('Document not initialized')
+    }
 
     this.sheet = this.doc.sheetsByTitle[QA_TAB_NAME]
     this.rowCount = this.sheet.rowCount

@@ -47,7 +47,6 @@ class ConnectionManager {
     console.log('Initialized Spreadsheet module for', userId)
     console.log('Active connections: ', Object.keys(this.connections).length)
     const userQAs = this._initialQAs.filter(qa => qa.user === userId)
-    console.log('user qas', userQAs)
     await this.connections[userId].manager.init(userQAs)
   }
 
