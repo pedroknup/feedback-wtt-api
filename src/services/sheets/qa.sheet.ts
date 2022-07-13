@@ -1,70 +1,83 @@
 /* eslint-disable import/extensions */
 import SheetBase from './sheet.base'
 import { IQA } from '../../models/IQA'
-import { QASheetCellsInfo, QA_TAB_NAME } from '../../enums/QASheet'
-import { GoogleSpreadsheetWorksheet } from 'google-spreadsheet'
 
 class QASheet extends SheetBase {
   questionsAndAnswers: IQA[] = []
-  sheet: GoogleSpreadsheetWorksheet | null = null
-  rowCount: number = 0
+  userColumnIndex: number = -1
 
-  async init(QAs: IQA[]): Promise<void> {
-    super.init()
+  async init(QAs?: IQA[]): Promise<void> {
+    await super.init()
 
     if (QAs) {
-      this.questionsAndAnswers = QAs;
+      this.questionsAndAnswers = QAs
     }
   }
 
-  private async _loadRows() {
-    if (!this.doc) {
-      await super.init()
-    }
-    if (!this.doc){
-      throw new Error('Document not initialized')
-    }
-
-    this.sheet = this.doc.sheetsByTitle[QA_TAB_NAME]
-    this.rowCount = this.sheet.rowCount
-    await this.sheet.loadCells(`${QASheetCellsInfo.INTERVAL}${this.rowCount}`)
+  private _getUserColumnIndex(userId: string): number {
+    const userColumn = this.rows[1].findIndex(row => row === userId)
+    if (userColumn === -1) throw new Error('User not found')
+    return userColumn
   }
 
-  public async fetchQAs(): Promise<IQA[]> {
-    await this._loadRows()
-
+  public async fetchQuestions(): Promise<IQA[]> {
     if (!this.doc || !this.sheet) throw new Error('Document or sheet not initialized')
 
-    console.log('fetching')
-    this.questionsAndAnswers = []
-    for (let i = 2; i <= this.rowCount; i += 1) {
-      const question = this.sheet.getCellByA1(`${QASheetCellsInfo.QUESTION_COLUMN}${i}`).formattedValue
-      if (question)
-        this.questionsAndAnswers.push({
-          question,
-          user: this.spreadSheetId,
-        })
-    }
+    await this._loadRows()
+    await this.loadRowsArray()
 
+    this.questionsAndAnswers = this.rows.slice(2).map(row => {
+      return {
+        question: row[0],
+        answer: '',
+        user: '',
+      }
+    })
     return this.questionsAndAnswers
   }
 
-  public async writeAnswers(answers: string[]): Promise<IQA[]> {
+  public async fetchQAs(userId: string): Promise<IQA[]> {
+    if (!this.doc || !this.sheet) throw new Error('Document or sheet not initialized')
+
     await this._loadRows()
+    await this.loadRowsArray()
+
+    const userColumn = this._getUserColumnIndex(userId)
+    const QAs = this.rows.slice(2).map(row => {
+      return {
+        question: row[0],
+        answer: row[userColumn],
+        user: userId,
+      }
+    })
+    return QAs
+  }
+
+  public async writeAnswersByUser(answers: string[], userId: string): Promise<IQA[]> {
+    await this.loadRowsArray()
 
     if (!this.doc || !this.sheet) throw new Error('Document or sheet not initialized')
 
-    if (answers.length !== this.rowCount - 1) throw new Error('Number of answers does not match number of questions' + answers.length + ' ' + this.rowCount)
+    if (answers.length !== this.rowCount - 2)
+      throw new Error(
+        'Number of answers does not match number of questions' + answers.length + ' ' + this.rowCount + ' ' + userId,
+      )
 
-    for (let i = 1; i < this.rowCount; i += 1) {
-      const answer = answers[i - 1]
-      this.questionsAndAnswers[i - 1].answer = answer
-      const cell = this.sheet.getCell(i, 1)
+    const userColumn = this._getUserColumnIndex(userId)
+    const QAs = []
+    for (let i = 2; i < this.rowCount; i += 1) {
+      const answer = answers[i - 2]
+      const cell = this.sheet.getCell(i, userColumn)
       cell.value = answer
+      QAs.push({
+        question: this.rows[i][0],
+        answer: answer,
+        user: userId,
+      })
     }
 
     await this.sheet.saveUpdatedCells()
-    return this.questionsAndAnswers
+    return QAs
   }
 }
 

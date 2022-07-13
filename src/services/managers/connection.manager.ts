@@ -1,19 +1,15 @@
 /* eslint-disable import/extensions */
 
-import { IQA } from 'src/models/IQA';
-import QASheet from '../sheets/qa.sheet';
-
-interface IConnections {
-  [key: string]: {
-    lastUsedAt: Date | undefined
-    manager: QASheet
-  }
-}
+import { IQA } from 'src/models/IQA'
+import QASheet from '../sheets/qa.sheet'
+import UserSheet from '../sheets/user.sheet'
 
 interface IProps {
   clientEmail: string
   privateKey: string
+  spreadSheet: string
   initialQAs: IQA[]
+  tabName: string
 }
 
 interface IUser {
@@ -24,45 +20,58 @@ interface IUser {
 class ConnectionManager {
   private _clientEmail: string
   private _privateKey: string
+  private _spreadSheet: string
   private _initialQAs: IQA[] = []
-  public connections: IConnections = {}
+  public UserSheet: UserSheet | null = null
+  public QASheet: QASheet | null = null
   public users: IUser[] = []
 
   constructor(props: IProps) {
     if (!(props.clientEmail && props.privateKey)) throw new Error('Mandatory fields are empty')
     this._clientEmail = props.clientEmail
     this._privateKey = props.privateKey
-    this._initialQAs = props.initialQAs;
+    this._spreadSheet = props.spreadSheet
+    this._initialQAs = props.initialQAs
   }
 
-  async init(userId: string): Promise<void> {
-    this.connections[userId] = {
-      lastUsedAt: new Date(),
-      manager: new QASheet({
-        clientEmail: this._clientEmail,
-        privateKey: this._privateKey,
-        spreadSheetId: userId,
-      }),
-    }
-    console.log('Initialized Spreadsheet module for', userId)
-    console.log('Active connections: ', Object.keys(this.connections).length)
-    const userQAs = this._initialQAs.filter(qa => qa.user === userId)
-    await this.connections[userId].manager.init(userQAs)
+  async init(): Promise<void> {
+    this.QASheet = new QASheet({
+      clientEmail: this._clientEmail,
+      privateKey: this._privateKey,
+      spreadSheetId: this._spreadSheet,
+      tabName: 'feedback',
+    })
+
+    await this.QASheet.init()
+
+    console.log('Initialized Spreadsheet module')
   }
 
-  async fetchQA(userId: string): Promise<IQA[]> {
-    if (!this.connections[userId]) {
-      this.init(userId)
+  async fetchQAByUser(userId: string): Promise<IQA[]> {
+    if (!this.QASheet) {
+      await this.init()
     }
-    return await this.connections[userId].manager.fetchQAs()
+    if (!this.QASheet) throw new Error('Not initiated')
+
+    return await this.QASheet.fetchQAs(userId)
+  }
+
+  async fetchQuestions(): Promise<IQA[]> {
+    if (!this.QASheet) {
+      await this.init()
+    }
+    if (!this.QASheet) throw new Error('Not initiated')
+
+    return await this.QASheet.fetchQuestions()
   }
 
   async writeAnswers(userId: string, answers: string[]): Promise<IQA[]> {
-    if (!this.connections[userId]) {
-      this.init(userId)
+    if (!this.QASheet) {
+      await this.init()
     }
-  
-    return await this.connections[userId].manager.writeAnswers(answers)
+    if (!this.QASheet) throw new Error('Not initiated')
+
+    return await this.QASheet.writeAnswersByUser(answers, userId)
   }
 }
 

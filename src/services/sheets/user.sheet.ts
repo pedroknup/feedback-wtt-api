@@ -1,59 +1,33 @@
 /* eslint-disable import/extensions */
-import { GoogleSpreadsheet } from 'google-spreadsheet'
-import { UsersSheetCellsInfo, USERS_TAB_NAME } from '../../enums/UsersSheet'
-import { Config } from '../../config'
+// import { UsersSheetCellsInfo, USERS_TAB_NAME } from '../../enums/UsersSheet'
 import { IUser } from '../../models/IUser'
+import SheetBase from './sheet.base'
 
-interface IProps {
-  clientEmail: string
-  privateKey: string
-}
-
-class UserSheet {
-  clientEmail: string
-  privateKey: string
-  doc: GoogleSpreadsheet | undefined
+class UserSheet extends SheetBase {
   public users: IUser[] = []
   public initialized = false
 
-  constructor(props: IProps) {
-    if (!(props.clientEmail && props.privateKey)) throw new Error('Mandatory fields are empty 2')
-    this.clientEmail = props.clientEmail
-    this.privateKey = props.privateKey
-  }
+  async init(users: IUser[] = []): Promise<void> {
+    await super.init()
 
-  async init(users: IUser[] = []) {
-    this.doc = new GoogleSpreadsheet(Config.usersSheet)
-
-    await this.doc.useServiceAccountAuth({
-      client_email: this.clientEmail,
-      private_key: this.privateKey,
-    })
-    this.initialized = true
-
-    await this.doc.loadInfo()
-    this.users = users
-    await this.loadUsers()
+    if (users) {
+      this.users = users
+    }
   }
 
   async loadUsers() {
-    if (!this.doc) {
+    if (!this.doc || !this.sheet) {
       await this.init()
     }
-    if (!this.doc) {
-      throw new Error()
-    }
+    if (!this.doc || !this.sheet) throw new Error('Document or sheet not initialized3')
+    await this.loadRowsArray()
 
-    const sheet = this.doc.sheetsByTitle[USERS_TAB_NAME]
-    const rowNumber = sheet.rowCount
-    await sheet.loadCells(`${UsersSheetCellsInfo.INTERVAL}${rowNumber}`)
-    this.users = []
-    for (let i = 1; i <= rowNumber; i += 1) {
-      this.users.push({
-        sheet: sheet.getCellByA1(`${UsersSheetCellsInfo.SHEET_COLUMN}${i}`).formattedValue,
-        name: sheet.getCellByA1(`${UsersSheetCellsInfo.NAME_COLUMN}${i}`).formattedValue,
-      })
-    }
+    this.users = this.rows.map(row => {
+      return {
+        name: row[0],
+        sheet: row[1],
+      }
+    })
     return this.users
   }
 }

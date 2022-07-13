@@ -1,9 +1,9 @@
-const QA_TAB_NAME = 'QA'
+const QA_TAB_NAME = 'feedback'
+const USERS_TAB_NAME = 'users'
 
 const QASheetCellsInfo = {
-  INTERVAL: 'A2:B',
   QUESTION_COLUMN: 'A',
   ANSWER_COLUMN: 'B',
 }
 
-export { QA_TAB_NAME, QASheetCellsInfo }
+export { USERS_TAB_NAME, QA_TAB_NAME, QASheetCellsInfo }

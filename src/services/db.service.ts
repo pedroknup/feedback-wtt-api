@@ -27,7 +27,6 @@ export class DBService extends DBServiceBase {
 
   public static async getUser(user: string) {
     const db = await DBService.db()
-
     return (await db.collection('users').findOne({ sheet: user })) as unknown as IUser
   }
 
@@ -52,5 +51,10 @@ export class DBService extends DBServiceBase {
     const db = await DBService.db()
 
     return await db.collection('users').deleteMany({})
+  }
+  public static async deleteAllQAs() {
+    const db = await DBService.db()
+
+    return await db.collection('qa').deleteMany({})
   }
 }
